@@ -1,0 +1,7 @@
+{
+  "name": "FGC Real-Time Trains",
+  "description": "Real-time train schedules for FGC stations using Open Data API.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
