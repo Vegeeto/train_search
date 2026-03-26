@@ -10,6 +10,7 @@ export interface FGCJourney {
   stop_lat: number;
   stop_lon: number;
   wheelchair_accessible?: number;
+  route_url?: string;
 }
 
 export interface FGCApiResponse {
@@ -36,7 +37,19 @@ export const STATIONS: Station[] = [
   { id: 'SJ', name: 'Sant Boi' }
 ];
 
-export const DESTINATIONS = {
-  TO_BARCELONA: 'Barcelona - Plaça Espanya',
-  TO_MOLI_NOU: 'Molí Nou'
+export const BARCELONA_TERMINAL = 'Barcelona - Plaça Espanya';
+
+export const DIRECTIONS = {
+  INBOUND: 'INBOUND',
+  OUTBOUND: 'OUTBOUND'
 };
+
+export const ROUTES = [
+  { name: 'Llobregat-Anoia', url: 'http://www.fgc.cat/cat/llobregat-anoia.asp' },
+  { name: 'Barcelona-Vallès', url: 'http://www.fgc.cat/cat/barcelona-valles.asp' },
+  { name: 'Lleida-La Pobla', url: 'http://www.fgc.cat/cat/lleida-la-pobla.asp' }
+];
+
+export const TRAIN_TYPES = [
+  'L8', 'S3', 'S4', 'S8', 'S9', 'R5', 'R6', 'R50', 'R60'
+];
