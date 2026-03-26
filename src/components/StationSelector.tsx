@@ -53,7 +53,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
         </div>
         <button
           onClick={() => onToggleFavorite(selectedStationId)}
-          className={`p-3 rounded-xl border transition-all active:scale-95 ${
+          className={`p-3 rounded-xl border transition-all active:scale-95 cursor-pointer ${
             isFavorite 
               ? 'bg-orange-50 border-orange-200 text-orange-500 shadow-sm' 
               : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600'

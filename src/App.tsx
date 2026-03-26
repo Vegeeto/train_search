@@ -43,6 +43,7 @@ export default function App() {
     setError(null);
     try {
       const offset = page * ITEMS_PER_PAGE;
+      const selectedStation = STATIONS.find(s => s.id === selectedStationId);
       const { results, totalCount: count } = await fetchTrains(
         selectedStationId, 
         direction, 
@@ -50,7 +51,8 @@ export default function App() {
         offset, 
         selectedHour || undefined,
         selectedTrainTypes.length > 0 ? selectedTrainTypes : undefined,
-        selectedRouteUrl || undefined
+        selectedRouteUrl || undefined,
+        selectedStation?.name
       );
       setTrains(results);
       setTotalCount(count);
@@ -126,7 +128,7 @@ export default function App() {
           <button 
             onClick={() => loadTrains(currentPage)}
             disabled={loading}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
             title="Refresh"
           >
             <RefreshCw size={20} className={`${loading ? 'animate-spin' : ''} text-gray-600`} />
@@ -137,16 +139,6 @@ export default function App() {
       <main className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-8">
         {/* Controls Section */}
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-6">
-          <StationSelector 
-            selectedStationId={selectedStationId}
-            onStationChange={(id) => {
-              setSelectedStationId(id);
-              setCurrentPage(0);
-            }}
-            favorites={favorites}
-            onToggleFavorite={toggleFavorite}
-          />
-
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
               <Info size={14} />
@@ -163,6 +155,16 @@ export default function App() {
             </select>
           </div>
 
+          <StationSelector 
+            selectedStationId={selectedStationId}
+            onStationChange={(id) => {
+              setSelectedStationId(id);
+              setCurrentPage(0);
+            }}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col gap-2">
               <label className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -175,7 +177,7 @@ export default function App() {
                 className={`w-full bg-gradient-to-r ${
                   selectedStationId === 'ES' 
                     ? 'from-gray-400 to-gray-500 cursor-not-allowed opacity-60' 
-                    : 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:scale-[0.98]'
+                    : 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:scale-[0.98] cursor-pointer'
                 } text-white font-semibold py-3 px-4 rounded-2xl shadow-lg transition-all flex items-center justify-between group`}
               >
                 <span className="text-lg truncate mr-2">
@@ -224,7 +226,7 @@ export default function App() {
                 </label>
                 <button 
                   onClick={() => setIsTrainTypesExpanded(!isTrainTypesExpanded)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400"
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 cursor-pointer"
                 >
                   {isTrainTypesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
@@ -243,7 +245,7 @@ export default function App() {
                         <button
                           key={type}
                           onClick={() => toggleTrainType(type)}
-                          className={`py-2 px-1 rounded-xl text-xs font-bold transition-all border ${
+                          className={`py-2 px-1 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                             selectedTrainTypes.includes(type)
                               ? 'bg-orange-500 border-orange-600 text-white shadow-sm'
                               : 'bg-white border-gray-200 text-gray-500 hover:border-orange-300'
@@ -256,7 +258,7 @@ export default function App() {
                     {selectedTrainTypes.length > 0 && (
                       <button 
                         onClick={() => setSelectedTrainTypes([])}
-                        className="text-[10px] text-orange-500 font-bold uppercase tracking-wider hover:underline self-start mt-3"
+                        className="text-[10px] text-orange-500 font-bold uppercase tracking-wider hover:underline self-start mt-3 cursor-pointer"
                       >
                         Clear filters
                       </button>
@@ -270,7 +272,7 @@ export default function App() {
           <div className="flex items-center justify-between text-[11px] text-gray-400 font-medium px-1">
             <div className="flex items-center gap-1">
               <Clock size={12} />
-              Last updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Last updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
             </div>
             {!selectedHour && (
               <div className="flex items-center gap-1">
@@ -317,7 +319,7 @@ export default function App() {
                 <p className="text-red-800 font-semibold">{error}</p>
                 <button 
                   onClick={() => loadTrains(currentPage)}
-                  className="mt-2 text-sm font-bold text-red-600 hover:underline"
+                  className="mt-2 text-sm font-bold text-red-600 hover:underline cursor-pointer"
                 >
                   Try again
                 </button>
@@ -358,7 +360,7 @@ export default function App() {
                     <button
                       onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
                       disabled={currentPage === 0 || loading}
-                      className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+                      className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm cursor-pointer"
                     >
                       <ChevronLeft size={20} />
                     </button>
@@ -368,7 +370,7 @@ export default function App() {
                     <button
                       onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
                       disabled={currentPage === totalPages - 1 || loading}
-                      className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+                      className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm cursor-pointer"
                     >
                       <ChevronRight size={20} />
                     </button>

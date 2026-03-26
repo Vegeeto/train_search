@@ -11,6 +11,7 @@ export interface FGCJourney {
   stop_lon: number;
   wheelchair_accessible?: number;
   route_url?: string;
+  stop_sequence?: number;
 }
 
 export interface FGCApiResponse {

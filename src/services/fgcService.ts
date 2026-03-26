@@ -11,9 +11,13 @@ export const fetchTrains = async (
   routeShortNames?: string[],
   routeUrl?: string
 ): Promise<{ results: FGCJourney[]; totalCount: number }> => {
-  let where = `stop_id="${stopId}"`;
+  let where = stopId === 'ES' ? 'stop_sequence=1' : `stop_id="${stopId}"`;
   
-  if (direction === DIRECTIONS.INBOUND) {
+  // If we are at the terminal station (Plaça Espanya), we can only go outbound.
+  // We use != to show all trains departing from this station.
+  if (stopId === 'ES') {
+    where += ` and trip_headsign!="${BARCELONA_TERMINAL}"`;
+  } else if (direction === DIRECTIONS.INBOUND) {
     where += ` and trip_headsign="${BARCELONA_TERMINAL}"`;
   } else {
     where += ` and trip_headsign!="${BARCELONA_TERMINAL}"`;
@@ -50,15 +54,15 @@ export const fetchTrains = async (
   });
 
   const url = `${BASE_URL}?${params.toString()}`;
+  console.debug('Fetching data: ', url)
 
   try {
-    console.debug('Fetching url ', url)
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
     }
     const data: FGCApiResponse = await response.json();
-    console.debug('Results found', data.total_count)
+    console.debug('Total results: ', data.total_count)
 
     // Filter results client-side
     // If no hour selected, filter by current time. If hour selected, show all for that hour.
