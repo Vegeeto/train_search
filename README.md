@@ -1,24 +1,50 @@
 # FGC Real-Time Train Tracker
 
-Real-time train schedules for FGC stations using Open Data API.
+A modern, responsive web application providing real-time train schedules for the **Ferrocarrils de la Generalitat de Catalunya (FGC)** network. Built with React and powered by the FGC Open Data API.
 
-## Deployment to GitHub Pages
+## 🚀 Features
 
-This project is configured for easy deployment to GitHub Pages.
+- **Multi-Network Support**: Seamlessly switch between Llobregat-Anoia, Barcelona-Vallès, and Lleida-La Pobla networks.
+- **Dynamic Station Filtering**: Station lists automatically update based on the selected route network.
+- **Real-Time Schedules**: Live arrival and departure information fetched directly from FGC's Open Data API.
+- **Terminal Awareness**: Automatically handles terminal stations (Plaça Espanya, Pl. Catalunya, Lleida Pirineus) with smart direction filtering.
+- **Advanced Filtering**: Filter by specific hours or train types (L8, S3, R5, etc.).
+- **Favorites**: Save your most-used stations for quick access (stored locally).
+- **Responsive Design**: Optimized for both desktop and mobile viewing with a clean, modern UI.
+- **Reliable Fetching**: Built-in timeout and retry mechanisms for API calls to ensure a smooth experience.
 
-### Automated Deployment (GitHub Actions)
+## 🛠️ Tech Stack
 
-A GitHub Actions workflow is included in `.github/workflows/deploy.yml`. 
-Whenever you push to the `main` branch, it will automatically:
-1. Build the project.
-2. Deploy the `dist` folder to the `gh-pages` branch.
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS
+- **Animations**: Motion (framer-motion)
+- **Icons**: Lucide React
+- **Data Source**: [FGC Open Data API](https://dadesobertes.fgc.cat/)
 
-### Manual Deployment
+## 📦 Getting Started
 
-If you want to deploy manually from your local machine:
-1. Run `npm run deploy`.
-2. This will build the project and push the `dist` folder to the `gh-pages` branch using the `gh-pages` package.
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-### Important Note on Vite Base Path
+2. **Run development server**:
+   ```bash
+   npm run dev
+   ```
 
-The `vite.config.ts` has been updated with `base: './'`. This ensures that all assets (JS, CSS, images) are loaded correctly regardless of whether the app is deployed to a subfolder (e.g., `https://username.github.io/repo-name/`) or a custom domain.
+3. **Build for production**:
+   ```bash
+   npm run build
+   ```
+
+## 🚢 Deployment
+
+This project is configured for automated deployment to GitHub Pages via GitHub Actions.
+
+- **Automated**: Push to `main` branch to trigger the `.github/workflows/deploy.yml` workflow.
+- **Manual**: Run `npm run deploy` to build and push to the `gh-pages` branch.
+
+---
+
+*Data provided by FGC Open Data API. This is an unofficial application.*

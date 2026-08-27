@@ -3,12 +3,13 @@
 APP_NAME=train_search
 DC_COMMAND=docker compose --file ./docker/docker-compose.yml
 
-.PHONY: up down build restart logs shell clean dist
+.PHONY: up down build restart logs shell clean dist test
 
 all: build up
 
 up:
 	$(DC_COMMAND) up -d
+	@echo "Application running at localhost:3000"
 
 down:
 	$(DC_COMMAND) down
@@ -24,6 +25,9 @@ logs:
 
 shell:
 	$(DC_COMMAND) exec app sh
+
+test:
+	$(DC_COMMAND) run --rm app npm run test
 
 clean:
 	$(DC_COMMAND) down -v

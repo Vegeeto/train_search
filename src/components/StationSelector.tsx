@@ -1,24 +1,28 @@
 import React from 'react';
-import { STATIONS } from '../types';
+import { Station } from '../types';
 import { MapPin, Star } from 'lucide-react';
 
 interface StationSelectorProps {
+  stations: Station[];
   selectedStationId: string;
   onStationChange: (stationId: string) => void;
   favorites: string[];
   onToggleFavorite: (stationId: string) => void;
+  isLoading?: boolean;
 }
 
 export const StationSelector: React.FC<StationSelectorProps> = ({ 
+  stations,
   selectedStationId, 
   onStationChange,
   favorites,
-  onToggleFavorite
+  onToggleFavorite,
+  isLoading = false
 }) => {
   const isFavorite = favorites.includes(selectedStationId);
 
   // Sort stations so favorites appear first
-  const sortedStations = [...STATIONS].sort((a, b) => {
+  const sortedStations = [...stations].sort((a, b) => {
     const aFav = favorites.includes(a.id);
     const bFav = favorites.includes(b.id);
     if (aFav && !bFav) return -1;
@@ -37,13 +41,20 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
           <select
             value={selectedStationId}
             onChange={(e) => onStationChange(e.target.value)}
-            className="w-full appearance-none bg-white border border-gray-200 text-gray-700 py-3 px-4 pr-10 rounded-xl leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all cursor-pointer font-medium"
+            disabled={isLoading}
+            className={`w-full appearance-none bg-white border border-gray-200 text-gray-700 py-3 px-4 pr-10 rounded-xl leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all cursor-pointer font-medium ${isLoading ? 'opacity-50' : ''}`}
           >
-            {sortedStations.map((station) => (
-              <option key={station.id} value={station.id}>
-                {favorites.includes(station.id) ? '⭐ ' : ''}{station.name}
-              </option>
-            ))}
+            {isLoading ? (
+              <option>Loading stations...</option>
+            ) : stations.length === 0 ? (
+              <option>No stations found</option>
+            ) : (
+              sortedStations.map((station) => (
+                <option key={station.id} value={station.id}>
+                  {favorites.includes(station.id) ? '⭐ ' : ''}{station.name}
+                </option>
+              ))
+            )}
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
             <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

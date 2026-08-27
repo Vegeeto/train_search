@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Train, Clock, MapPin, Accessibility } from 'lucide-react';
+import { Train, Clock, MapPin, Accessibility, AlertTriangle } from 'lucide-react';
 import { FGCJourney } from '../types';
 
 interface TrainCardProps {
@@ -16,12 +16,19 @@ export const TrainCard: React.FC<TrainCardProps> = ({ journey }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4 relative overflow-hidden"
+      className={`bg-white rounded-2xl shadow-sm border ${journey.is_last_train ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'} p-5 flex flex-col gap-4 relative overflow-hidden`}
     >
       <div 
         className="absolute top-0 left-0 w-1.5 h-full" 
         style={{ backgroundColor: routeColor }}
       />
+      
+      {journey.is_last_train && (
+        <div className="absolute top-0 right-0 bg-orange-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl flex items-center gap-1 shadow-sm">
+          <AlertTriangle size={10} />
+          Last Train
+        </div>
+      )}
       
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">

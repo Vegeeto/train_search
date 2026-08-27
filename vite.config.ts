@@ -9,7 +9,10 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     base: './',
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      // Only inline what the client genuinely needs. `define` substitutes the literal
+      // value into the bundle, so anything secret listed here ships to every visitor —
+      // GEMINI_API_KEY used to be inlined here despite nothing importing it.
+      'process.env.APP_DEBUG': JSON.stringify(env.APP_DEBUG),
     },
     resolve: {
       alias: {
