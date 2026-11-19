@@ -10,4 +10,5 @@ afterEach(() => {
     if (name) document.cookie = `${name}=; Max-Age=0; Path=/`;
   }
   window.history.replaceState(null, '', '/');
+  delete document.documentElement.dataset.theme;
 });

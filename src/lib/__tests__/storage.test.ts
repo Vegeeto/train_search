@@ -3,7 +3,7 @@ import { COOKIE_NAME, addRecent, emptyPrefs, encodePrefs, loadPrefs, sanitizePre
 
 describe('cookie persistence', () => {
   it('round-trips preferences through the cookie', () => {
-    const prefs = { ...emptyPrefs(), stations: ['PC'], journeys: [['SC', 'SR']] as [string, string][], lang: 'es' as const };
+    const prefs = { ...emptyPrefs(), stations: ['PC'], journeys: [['SC', 'SR']] as [string, string][], lang: 'es' as const, theme: 'dark' as const };
     savePrefs(prefs);
     expect(document.cookie).toContain(`${COOKIE_NAME}=`);
     expect(loadPrefs()).toEqual({ ...prefs, recents: [] });
@@ -20,8 +20,10 @@ describe('cookie persistence', () => {
       journeys: [['PC', 'SR'], ['PC', 'PC'], ['bad code', 'SR'], 'nope'],
       recents: [['PC', null], ['SR', 'PC'], [1, 2]],
       lang: 'fr',
+      theme: 'sepia',
     });
-    expect(prefs).toEqual({ stations: ['PC'], journeys: [['PC', 'SR']], recents: [['PC', null], ['SR', 'PC']], lang: null });
+    expect(prefs).toEqual({ stations: ['PC'], journeys: [['PC', 'SR']], recents: [['PC', null], ['SR', 'PC']], lang: null, theme: null });
+    expect(sanitizePrefs({ lang: 'en', theme: 'dark' })).toMatchObject({ lang: 'en', theme: 'dark' });
     expect(sanitizePrefs('string')).toEqual(emptyPrefs());
   });
 

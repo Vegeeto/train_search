@@ -149,6 +149,33 @@ describe('App', () => {
     expect(decodeURIComponent(document.cookie)).toContain('"lang":"ca"');
   });
 
+  it('toggles dark/light mode and remembers it, with the language, in the cookie', async () => {
+    mockApi();
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+
+    // No saved theme: follows the system (light in jsdom), no override on <html>.
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(screen.getByRole('button', { name: 'Switch to light mode' })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Language'), 'es');
+    expect(decodeURIComponent(document.cookie)).toContain('"theme":"dark"');
+    expect(decodeURIComponent(document.cookie)).toContain('"lang":"es"');
+
+    // A fresh visit restores both from the cookie.
+    unmount();
+    delete document.documentElement.dataset.theme;
+    render(<App />);
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(screen.getByRole('button', { name: 'Cambiar a modo claro' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Idioma')).toHaveValue('es');
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a modo claro' }));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(decodeURIComponent(document.cookie)).toContain('"theme":"light"');
+  });
+
   it('offers a retry when the station list fails', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('offline'));
     const user = userEvent.setup();

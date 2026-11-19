@@ -1,11 +1,14 @@
 /**
- * User preferences, kept in one first-party cookie (as requested) so favourites survive
+ * User preferences (favourites, recents, language, theme), kept in one first-party cookie (as requested) so favourites survive
  * across visits. Everything is stored as two-letter station codes to stay well under
  * the ~4 KB cookie limit, and is validated on read: the cookie is user-editable input.
  */
 
 export type Lang = 'ca' | 'es' | 'en';
 export const LANGS: Lang[] = ['ca', 'es', 'en'];
+
+export type Theme = 'light' | 'dark';
+export const THEMES: Theme[] = ['light', 'dark'];
 
 export interface Prefs {
   /** Favourite stations. */
@@ -15,6 +18,8 @@ export interface Prefs {
   /** Recent searches as [from, to | null], newest first. */
   recents: [string, string | null][];
   lang: Lang | null;
+  /** Explicit theme; null follows the system setting. */
+  theme: Theme | null;
 }
 
 export const COOKIE_NAME = 'fgc_prefs';
@@ -23,7 +28,7 @@ const MAX_FAVOURITES = 20;
 const MAX_RECENTS = 6;
 const MAX_COOKIE_CHARS = 3800;
 
-export const emptyPrefs = (): Prefs => ({ stations: [], journeys: [], recents: [], lang: null });
+export const emptyPrefs = (): Prefs => ({ stations: [], journeys: [], recents: [], lang: null, theme: null });
 
 const CODE = /^[A-Z0-9]{1,4}$/;
 const isCode = (v: unknown): v is string => typeof v === 'string' && CODE.test(v);
@@ -51,6 +56,7 @@ export function sanitizePrefs(raw: unknown): Prefs {
       .slice(0, MAX_RECENTS);
   }
   if (typeof r.lang === 'string' && (LANGS as string[]).includes(r.lang)) prefs.lang = r.lang as Lang;
+  if (typeof r.theme === 'string' && (THEMES as string[]).includes(r.theme)) prefs.theme = r.theme as Theme;
   return prefs;
 }
 

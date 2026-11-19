@@ -1,14 +1,16 @@
-import { AlertTriangle, ArrowUpDown, RefreshCw, Star, TrainFront } from 'lucide-react';
+import { AlertTriangle, ArrowUpDown, Moon, RefreshCw, Star, Sun, TrainFront } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { HomePanel } from './components/HomePanel';
 import { StationPicker } from './components/StationPicker';
 import { TrainResults } from './components/TrainResults';
 import { useAsync } from './hooks/useAsync';
 import { usePrefs } from './hooks/usePrefs';
+import { useTheme } from './hooks/useTheme';
 import { useUrlState } from './hooks/useUrlState';
 import { I18nProvider, detectLang, useI18n } from './i18n';
 import { LANG_NAMES } from './i18n/messages';
 import { fetchStations } from './lib/stations';
+import { nextTheme } from './lib/theme';
 import { LANGS, addRecent, hasJourney, toggleJourney, toggleStation, type Lang, type Prefs } from './lib/storage';
 import type { Station } from './lib/types';
 
@@ -24,6 +26,7 @@ export default function App() {
 
 function Shell({ prefs, updatePrefs }: { prefs: Prefs; updatePrefs: (fn: (p: Prefs) => Prefs) => void }) {
   const { t, lang } = useI18n();
+  const theme = useTheme(prefs.theme);
   const { state, retry } = useAsync('stations', fetchStations);
   const stations = useMemo(() => (state.status === 'ready' ? state.data : []), [state]);
   const byCode = useMemo(() => new Map(stations.map((s) => [s.code, s])), [stations]);
@@ -74,21 +77,32 @@ function Shell({ prefs, updatePrefs }: { prefs: Prefs; updatePrefs: (fn: (p: Pre
             <span className="block text-xs text-muted">{t('appSubtitle')}</span>
           </span>
         </button>
-        <label className="sr-only" htmlFor="lang">
-          {t('language')}
-        </label>
-        <select
-          id="lang"
-          value={lang}
-          onChange={(e) => updatePrefs((p) => ({ ...p, lang: e.target.value as Lang }))}
-          className="h-9 rounded-lg border border-line bg-surface px-2 text-sm font-medium"
-        >
-          {LANGS.map((l) => (
-            <option key={l} value={l}>
-              {LANG_NAMES[l]}
-            </option>
-          ))}
-        </select>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            aria-label={theme === 'dark' ? t('themeToLight') : t('themeToDark')}
+            title={theme === 'dark' ? t('themeToLight') : t('themeToDark')}
+            onClick={() => updatePrefs((p) => ({ ...p, theme: nextTheme(theme) }))}
+            className="flex size-9 items-center justify-center rounded-lg border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink"
+          >
+            {theme === 'dark' ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
+          </button>
+          <label className="sr-only" htmlFor="lang">
+            {t('language')}
+          </label>
+          <select
+            id="lang"
+            value={lang}
+            onChange={(e) => updatePrefs((p) => ({ ...p, lang: e.target.value as Lang }))}
+            className="h-9 rounded-lg border border-line bg-surface px-2 text-sm font-medium"
+          >
+            {LANGS.map((l) => (
+              <option key={l} value={l}>
+                {LANG_NAMES[l]}
+              </option>
+            ))}
+          </select>
+        </div>
       </header>
 
       <div className="mb-4 rounded-2xl border border-line bg-surface p-4 shadow-sm">
