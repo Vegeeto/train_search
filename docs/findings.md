@@ -1,5 +1,15 @@
 # Findings: Bugs, Security Issues, and Inconsistencies
 
+> **v2 rewrite (2026-11-19).** The app was rebuilt from the specs (`feat/v2-rewrite`). File and line references below point at the v1 code, which no longer exists. How each v1 issue is resolved in v2:
+>
+> - **Network structure (FREQ-1/2/3/4, TERM-1, BUG-4, BUG-11):** no hardcoded networks, terminals or line lists. Stations, lines and colours come from the data. Direction is "from → to" instead of inbound/outbound relative to a terminal name.
+> - **Fetching (BUG-1, BUG-3, BUG-5, BUG-8, BUG-9):** errors surface with a retry. `exports` returns complete results, so there's no 100-row cap. Superseded loads are aborted.
+> - **Timezone ("known limitation"):** fixed. All time logic uses Europe/Madrid.
+> - **Security (SEC-1–4):** no API key anywhere. All query strings are escaped. Stored preferences are validated. `.env` is no longer copied into the Docker image.
+> - **Housekeeping (INC-1–6, INFRA-1/2/4):** retry now exists, template dependencies are removed, the package is renamed, and the Makefile is fixed. INFRA-3 is kept intentionally: the gh-pages push needs `contents: write`, which is now commented.
+>
+> The v2 equivalent of the live-data findings is `docs/api-integration.md`.
+
 ## Status Update (2026-08-03)
 
 The functional bugs below (BUG-1, BUG-4, BUG-5) were fixed in the working tree after this document was originally written — `fetchTrains` now re-throws (see `src/services/fgcService.ts`), station dedup now sorts by `stop_id` before picking one, and `App.tsx` uses `isSyncingRef` instead of state for the sync guard. A full test suite now exists at `src/services/__tests__/fgcService.test.ts` (19 tests, all passing) covering these paths with mocked `fetch`.
