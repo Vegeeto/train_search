@@ -1,5 +1,3 @@
-#bin/bash
-
 APP_NAME=train_search
 DC_COMMAND=docker compose --file ./docker/docker-compose.yml
 
@@ -34,7 +32,8 @@ clean:
 
 # Build dist folder for GitHub Pages
 dist:
-	rm -rf dist/assets
+	rm -rf dist
+	docker rm -f $(APP_NAME)_build 2>/dev/null || true
 	docker build --target build -t $(APP_NAME):build -f ./docker/Dockerfile .
 	docker create --name $(APP_NAME)_build $(APP_NAME):build
 	docker cp $(APP_NAME)_build:/app/dist/. ./dist

@@ -34,7 +34,7 @@ RUN npm ci
 
 COPY . .
 
-# Copy .env file for build-time environment variables
-COPY .env .
+# .env files are excluded by .dockerignore: the app needs no secrets, and build-time
+# flags (VITE_APP_DEBUG) can be passed with --build-arg / ENV if ever needed.
 
 RUN npm run build

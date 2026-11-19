@@ -5,6 +5,7 @@ on:
     branches:
       - main
 
+# contents: write is required: the deploy action pushes the build to the gh-pages branch.
 permissions:
   contents: write
 
@@ -15,9 +16,10 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Install and Build 🔧
+      - name: Install, test and build 🔧
         run: |
-          npm install
+          npm ci
+          npm test
           npm run build
 
       - name: Deploy 🚀

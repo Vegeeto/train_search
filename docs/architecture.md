@@ -1,100 +1,81 @@
-# Architecture Overview
+# Architecture
 
-## Application Type
+## Shape
 
-Single-page application (SPA) built with React 18 + TypeScript + Vite. There is no backend — all data is fetched directly from the FGC Open Data API from the browser.
-
-## Directory Structure
+A static single-page app (React + TypeScript + Vite) that talks to the FGC Open Data API directly from the browser. Every dataset it uses sends `Access-Control-Allow-Origin: *`, so there is no backend and no secrets.
 
 ```
-train_search/
-├── src/
-│   ├── App.tsx               # Root component: state management, routing logic, layout
-│   ├── types.ts              # TypeScript interfaces + static constants (STATIONS, ROUTES, DIRECTIONS); train types live per-route on ROUTES[].trainTypes
-│   ├── services/
-│   │   └── fgcService.ts     # All FGC API calls (fetchTrains, fetchStations)
-│   └── components/
-│       ├── TrainCard.tsx     # Renders a single train journey card
-│       └── StationSelector.tsx # Station dropdown with favorites sorting
-├── docker/
-│   ├── Dockerfile            # Multi-stage: `development` and `build` targets
-│   └── docker-compose.yml    # Dev environment: mounts source, maps port 3000
-├── .github/workflows/
-│   └── deploy.yml            # CI: npm build → gh-pages branch on push to main
-├── Makefile                  # Docker Compose shortcuts + `dist` extraction target
-├── vite.config.ts            # Vite config: React plugin, Tailwind, base='./', GEMINI_API_KEY define
-└── package.json              # Scripts: dev, build, deploy (gh-pages), lint
+src/
+├── main.tsx                 entry
+├── App.tsx                  shell: header, search card, home vs results
+├── index.css                Tailwind + light/dark theme tokens
+├── lib/                     framework-free logic (all unit-tested)
+│   ├── api.ts               fetch with timeout + retry, ODSQL escaping, export URLs
+│   ├── stations.ts          network-wide station list (one grouped export)
+│   ├── timetable.ts         per-station full-day timetable, cached
+│   ├── departures.ts        departures board from timetable rows
+│   ├── journeys.ts          A → B direct-train pairing (no trip_id in the data)
+│   ├── live.ts              live positioning feed: parse + match to departures
+│   ├── search.ts            accent/abbreviation-insensitive station search
+│   ├── geo.ts               nearest stations
+│   ├── storage.ts           cookie-backed preferences (validated on read)
+│   ├── time.ts              Europe/Madrid clock, GTFS `24:xx` times
+│   ├── colors.ts            line colours + readable text colour
+│   └── types.ts
+├── hooks/
+│   ├── useAsync.ts          keyed loading with abort (stale responses can't win)
+│   ├── useNow.ts            Madrid clock tick (15 s)
+│   ├── useLiveTrains.ts     30 s polling, paused while the tab is hidden
+│   ├── usePrefs.ts          favourites / recents / language
+│   └── useUrlState.ts       ?from=&to=&at= ↔ state, Back button support
+├── i18n/                    ca / es / en messages + translator context
+└── components/
+    ├── StationPicker.tsx    ARIA combobox
+    ├── TrainResults.tsx     loads data, attaches live info, picks the panel
+    ├── ResultsPanel.tsx     list with line filter + "show more"
+    ├── TrainRows.tsx        departure row / journey row
+    ├── LiveInfo.tsx         stops-away, punctuality, occupancy meter
+    ├── HomePanel.tsx        favourites, nearby, recents
+    └── LineBadge.tsx
 ```
 
-## State Management (App.tsx)
-
-All state lives in the root `App` component via `useState`. There is no external state library.
-
-| State variable       | Type            | Purpose                                               |
-|----------------------|-----------------|-------------------------------------------------------|
-| `stations`           | `Station[]`     | Stations for the currently selected route (dynamic)   |
-| `selectedStationId`  | `string`        | Currently selected station ID (UI key only — the matching `Station.name` is derived and passed to `fetchTrains`, not the ID) |
-| `direction`          | `string`        | `INBOUND` or `OUTBOUND`                               |
-| `selectedRouteUrl`   | `string`        | URL identifier for the selected FGC route network     |
-| `selectedHour`       | `string`        | Hour filter (`''` = live mode, `'0'`–`'23'` = fixed) |
-| `selectedTrainTypes` | `string[]`      | Active train type filters (e.g. `['L8', 'R5']`)       |
-| `currentPage`        | `number`        | Current page index (0-based, client-side pagination)  |
-| `trains`             | `FGCJourney[]`  | Current page of train results                         |
-| `totalCount`         | `number`        | Total filtered results (for pagination math)          |
-| `loading`            | `boolean`       | True while any fetch is in-flight                     |
-| `isSyncingStations`  | `boolean`       | True while station list is being fetched              |
-| `error`              | `string\|null`  | Error message for the results section                 |
-| `lastUpdated`        | `Date`          | Timestamp of the last successful fetch                |
-| `favorites`          | `string[]`      | Favorite station IDs, persisted to `localStorage`     |
-
-## Data Flow
+## Data flow
 
 ```
-User selects route
-      │
-      ▼
-useEffect [selectedRouteUrl]
-      │  fetchStations(routeUrl, routeLongName)  ──→  FGC API (group_by stop_id, stop_name)
-      │  setStations(results)
-      │  (auto-selects first station if current is not in new list)
-      ▼
-useEffect [loadTrains, currentPage, isSyncingStations]
-      │  fetchTrains(stationName, direction, limit, offset, hour, types, routeUrl, terminal, routeLongName)
-      │  ──→  FGC API (viajes-de-hoy/records with where clause)
-      │  ──→  FGC API (second request for last-train-of-day detection)
-      │  client-side filter by time + paginate
-      ▼
-      trains / totalCount state updated → TrainCard components render
+App start ──► fetchStations()             1 grouped export, ~600 rows, ~0.3 s
+               └► Station[] (code, name, coords, lines)
+
+URL / picker ─► selection {from, to, at}   (mirrored in the URL)
+
+TrainResults
+  ├─ timetable.get([from.name, to?.name])   full day per station, cached 30 min;
+  │                                         adding a destination only downloads it
+  ├─ departuresFrom(rows)   or   directJourneys(rows, from, to)
+  ├─ filter by start time (now or `at`)
+  └─ live mode only:
+       useLiveTrains() every 30 s ──► attachLive(items, from.code, trains)
 ```
 
-## Auto-Refresh
+The timetable is downloaded once per station and filtered in memory, so changing the time, the line filter or paging costs no request. Only the live feed is polled.
 
-A 60-second `setInterval` is set up inside the train-loading `useEffect`, **only when** `!selectedHour && selectedTrainTypes.length === 0`. The interval is cleared when those conditions change or when the component unmounts.
+## State
 
-## Favorites Persistence
+There is no global store. The selection lives in the URL (`useUrlState`), preferences in a cookie (`usePrefs`), and server data in `useAsync` and the `TimetableCache` singleton. `useAsync` aborts superseded loads and ignores their results, which prevents the "old station's response overwrites the new one" class of bug.
 
-Favorites are stored in `localStorage` under the key `fgc_favorites` as a JSON-serialised `string[]` of station IDs. They are read on initial render and written on every change via a dedicated `useEffect`.
+## Preferences cookie
 
-## Routing & Networks
+`fgc_prefs`, scoped to the app's own path, `SameSite=Lax`, `Secure` on HTTPS, max-age 400 days. It holds station codes only:
 
-Three route networks are defined as static constants in `types.ts`:
+```json
+{"stations":["PC"],"journeys":[["SC","SR"]],"recents":[["PC",null]],"lang":"ca"}
+```
 
-| Name              | URL slug              | Terminal station          | `routeLongName` override |
-|-------------------|-----------------------|---------------------------|---------------------------|
-| Llobregat-Anoia   | `llobregat-anoia`     | Barcelona - Plaça Espanya | —                          |
-| Barcelona-Vallès  | `barcelona-valles`    | Barcelona - Pl. Catalunya | —                          |
-| Lleida-La Pobla   | `lleida-la-pobla`     | Lleida Pirineus           | `Lleida - La Pobla` (its records have `route_url: null`, see `docs/api-integration.md`) |
+`sanitizePrefs` validates every value against `^[A-Z0-9]{1,4}$` on read, so a corrupt or tampered cookie resets to defaults instead of crashing or reaching a query. Size is capped below the 4 KB cookie limit by dropping recents first.
 
-Each route also carries `trainTypes: string[]` — the valid `route_short_name` filter values for that network, confirmed against the live API and shown in the Train Types filter section.
+## Testing
 
-"Terminal" is identified by **name**, not a separate ID: `App.tsx` derives `isTerminal = selectedStationName === currentRoute.terminal`. When the selected station is the terminal, only outbound trains are shown (direction toggle is disabled) — this used to rely on a hardcoded `originId` field that didn't match any real `stop_id` in the live data (dead code); it was removed once station matching switched to `stop_name`.
-
-## Deployment
-
-Two parallel deployment paths exist:
-
-1. **GitHub Actions** (`.github/workflows/deploy.yml`): runs `npm install && npm run build` on push to `main`, then uses `JamesIves/github-pages-deploy-action@v4` to push `dist/` to the `gh-pages` branch.
-
-2. **Manual** (`npm run deploy`): uses the `gh-pages` npm package to push `dist/` to `gh-pages`. Requires the project to have been built first (`predeploy` script runs `npm run build` automatically).
-
-3. **Docker** (`make dist`): builds the `build` stage of the Dockerfile, creates a temporary container, copies out `dist/`, and removes the container. Used to produce deployment artifacts locally via Docker.
+| Suite | What |
+|---|---|
+| `src/lib/__tests__/*.test.ts` | pure logic: time, search, journeys, live matching, storage, API client, caching, i18n parity |
+| `src/__tests__/App.test.tsx` | UI flows against a mocked `fetch`: search → departures with live badge, A → B + favourite cookie, shared link + language switch, retry, bad link |
+| `src/lib/__tests__/live-api.test.ts` | opt-in (`npm run test:live`) contract tests against the real API, including plausible ride-time ranges for real station pairs |

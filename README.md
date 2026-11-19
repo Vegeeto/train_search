@@ -1,50 +1,47 @@
-# FGC Real-Time Train Tracker
+# FGC Trains
 
-A modern, responsive web application providing real-time train schedules for the **Ferrocarrils de la Generalitat de Catalunya (FGC)** network. Built with React and powered by the FGC Open Data API.
+An unofficial, mobile-first web app for **Ferrocarrils de la Generalitat de Catalunya (FGC)** trains: live departures, direct journeys between two stations, and real-time train positions, built on FGC Open Data. It runs entirely in the browser, with no backend.
 
-## 🚀 Features
+## Features
 
-- **Multi-Network Support**: Seamlessly switch between Llobregat-Anoia, Barcelona-Vallès, and Lleida-La Pobla networks.
-- **Dynamic Station Filtering**: Station lists automatically update based on the selected route network.
-- **Real-Time Schedules**: Live arrival and departure information fetched directly from FGC's Open Data API.
-- **Terminal Awareness**: Automatically handles terminal stations (Plaça Espanya, Pl. Catalunya, Lleida Pirineus) with smart direction filtering.
-- **Advanced Filtering**: Filter by specific hours or train types (L8, S3, R5, etc.).
-- **Favorites**: Save your most-used stations for quick access (stored locally).
-- **Responsive Design**: Optimized for both desktop and mobile viewing with a clean, modern UI.
-- **Reliable Fetching**: Built-in timeout and retry mechanisms for API calls to ensure a smooth experience.
+- **One search for the whole network**: no picking a network first. Search ignores accents and handles abbreviations (`placa cat`, `sarria`, `pl molina` and the code `PE` all work).
+- **Live departures board**: countdowns, platform, and a "last train" flag. Late trains the live feed says are still coming stay on the board. Filter by line.
+- **From → to journeys**: every direct train between two stations, with departure, arrival and ride time. Swap direction in one tap.
+- **Live train info**: from FGC's train-positioning feed, how many stops away the train is (or "at platform"), on time or delayed, and how full it is.
+- **Nearby stations**: the three closest stations, using browser geolocation.
+- **Favourites and recents**: save stations and journeys (origin + destination) for one-tap access. Stored in a first-party cookie.
+- **Plan ahead**: pick a departure time instead of "now".
+- **Shareable links**: `?from=PC&to=SR&at=08:30`. The Back button works.
+- **Catalan, Spanish and English**: detected from the browser, switchable, remembered.
+- **Correct time everywhere**: all times use Europe/Madrid, including after-midnight trains (`24:30`), whatever the viewer's timezone.
+- Light/dark theme, keyboard-accessible combobox, works on phones and desktops.
 
-## 🛠️ Tech Stack
+## Tech stack
 
-- **Frontend**: React 18, TypeScript, Vite
-- **Styling**: Tailwind CSS
-- **Animations**: Motion (framer-motion)
-- **Icons**: Lucide React
-- **Data Source**: [FGC Open Data API](https://dadesobertes.fgc.cat/)
+React 19, TypeScript (strict), Vite 6, Tailwind CSS 4, Lucide icons, Vitest + Testing Library.
 
-## 📦 Getting Started
+## Getting started
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+npm run dev          # http://localhost:3000
+npm test             # unit + UI tests (mocked API)
+npm run test:live    # contract tests against the real FGC API
+npm run build        # type-check + production build in dist/
+```
 
-2. **Run development server**:
-   ```bash
-   npm run dev
-   ```
+Docker: `make up` (dev server on :3000), `make test`, `make dist`.
 
-3. **Build for production**:
-   ```bash
-   npm run build
-   ```
+## Deployment
 
-## 🚢 Deployment
+Pushing to `main` runs `.github/workflows/deploy.yml`: `npm ci`, `npm test`, `npm run build`, then publishes `dist/` to the `gh-pages` branch. `npm run deploy` does the same by hand.
 
-This project is configured for automated deployment to GitHub Pages via GitHub Actions.
+## Documentation
 
-- **Automated**: Push to `main` branch to trigger the `.github/workflows/deploy.yml` workflow.
-- **Manual**: Run `npm run deploy` to build and push to the `gh-pages` branch.
+- [`docs/architecture.md`](docs/architecture.md): modules, data flow, state.
+- [`docs/api-integration.md`](docs/api-integration.md): which FGC datasets are used, how, and the verified quirks.
+- [`docs/findings.md`](docs/findings.md): bug and security history of the v1 app.
 
 ---
 
-*Data provided by FGC Open Data API. This is an unofficial application.*
+*Data: [FGC Open Data](https://dadesobertes.fgc.cat/). This is an unofficial application, not affiliated with FGC.*
