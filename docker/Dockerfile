@@ -2,7 +2,7 @@
 # ========================
 # ARG defaults
 # ========================
-ARG NODE_VERSION=20-alpine
+ARG NODE_VERSION=24-alpine
 
 # =========================================
 # Stage 1: Development
